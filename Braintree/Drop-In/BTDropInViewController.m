@@ -14,6 +14,8 @@
 #import "BTLogger_Internal.h"
 #import "BTCoinbase.h"
 
+//Amol modified
+
 @interface BTDropInViewController () < BTDropInSelectPaymentMethodViewControllerDelegate, BTUIScrollViewScrollRectToVisibleDelegate, BTUICardFormViewDelegate, BTPaymentMethodCreationDelegate, BTDropInViewControllerDelegate>
 
 @property (nonatomic, strong) BTDropInContentView *dropInContentView;
