@@ -12,6 +12,8 @@
 #import "BTPaymentMethodCreationDelegate.h"
 #import "BTClient_Internal.h"
 #import "BTLogger_Internal.h"
+#import "BTMutablePayPalPaymentMethod.h"
+
 
 @interface BTDropInViewController () < BTDropInSelectPaymentMethodViewControllerDelegate, BTUIScrollViewScrollRectToVisibleDelegate, BTUICardFormViewDelegate, BTPaymentMethodCreationDelegate, BTDropInViewControllerDelegate>
 
@@ -384,9 +386,15 @@
 #pragma mark BTDropInViewControllerDelegate implementation
 
 - (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod {
+    
     [viewController.navigationController dismissViewControllerAnimated:YES completion:nil];
-
-    NSMutableArray *newPaymentMethods = [NSMutableArray arrayWithArray:self.paymentMethods];
+    
+    NSMutableArray *newPaymentMethods = [NSMutableArray array];
+    for (BTPaymentMethod *paymentMethod in self.paymentMethods) {
+        if ([paymentMethod isKindOfClass:[BTMutablePayPalPaymentMethod class]]) {
+            [newPaymentMethods addObject:paymentMethod];
+        }
+    }
     [newPaymentMethods insertObject:paymentMethod atIndex:0];
     self.paymentMethods = newPaymentMethods;
 }
