@@ -1,6 +1,12 @@
 @import UIKit;
 #import "Braintree-API.h"
 
+typedef NS_ENUM(NSUInteger, BTPaymentMethodCard) {
+    BTPaymentMethodCardDontSave = 0,
+    BTPaymentMethodCardSave
+};
+
+
 @class BTUI;
 @protocol BTDropInViewControllerDelegate;
 
@@ -107,6 +113,8 @@
 /// @param paymentMethod The selected (and possibly newly created) payment method.
 - (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod;
 
+
+
 /// Informs the delegate when the user has decided to cancel out of the Drop In payment form.
 ///
 /// Drop In handles its own error cases, so this cancelation is user initiated and
@@ -117,6 +125,20 @@
 - (void)dropInViewControllerDidCancel:(BTDropInViewController *)viewController;
 
 @optional
+
+/**
+ *  This will be called once the card has been saved and passes back if the card needs to be saved or deleted
+ *
+ *  @param viewController  The Drop In view controller informing its delegate that the payment method was added
+ *  @param paymentMethod     payment method with nonce
+ *  @param paymentMethodCard
+ */
+- (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod paymentMethodCard:(BTPaymentMethodCard)paymentMethodCard;
+
+/**
+ *  This request needs to be synchronous request. Its in the hands of the client to make this request synchronously.
+ */
+- (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController;
 
 /// Informs the delegate when the user has entered or selected payment information.
 ///

@@ -84,7 +84,7 @@
 
 - (void)setOptionalFields:(BTUICardFormOptionalFields)optionalFields {
     _optionalFields = optionalFields;
-    NSMutableArray *fields = [NSMutableArray arrayWithObjects:self.numberField, self.expiryField,self.saveSwitch, nil];
+    NSMutableArray *fields = [NSMutableArray arrayWithObjects:self.numberField, self.expiryField, nil];
 
     self.cvvField.hidden = self.postalCodeField.hidden = YES;
     if (optionalFields & BTUICardFormOptionalFieldsCvv) {
@@ -95,7 +95,8 @@
         [fields addObject:self.postalCodeField];
         self.postalCodeField.hidden = NO;
     }
-
+    
+    [fields addObject:self.saveSwitch];
     // Set bottom border for fields
     for (NSUInteger i = 0; i < fields.count - 1; i++) {
         [fields[i] setBottomBorder:YES];
