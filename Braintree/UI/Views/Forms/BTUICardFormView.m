@@ -5,7 +5,7 @@
 #import "BTUICardPostalCodeField.h"
 #import "BTUI.h"
 #import "BTUILocalizedString.h"
-
+#import "BTUISaveSwitch.h"
 
 @interface BTUICardFormView ()<BTUIFormFieldDelegate>
 
@@ -13,6 +13,7 @@
 @property (nonatomic, strong) BTUICardExpiryField *expiryField;
 @property (nonatomic, strong) BTUICardCvvField *cvvField;
 @property (nonatomic, strong) BTUICardPostalCodeField *postalCodeField;
+@property (nonatomic) BTUISaveSwitch *saveSwitch;
 
 @property (nonatomic, strong) NSArray *fields;
 @property (nonatomic, strong) NSArray *dynamicConstraints;
@@ -83,7 +84,7 @@
 
 - (void)setOptionalFields:(BTUICardFormOptionalFields)optionalFields {
     _optionalFields = optionalFields;
-    NSMutableArray *fields = [NSMutableArray arrayWithObjects:self.numberField, self.expiryField, nil];
+    NSMutableArray *fields = [NSMutableArray arrayWithObjects:self.numberField, self.expiryField,self.saveSwitch, nil];
 
     self.cvvField.hidden = self.postalCodeField.hidden = YES;
     if (optionalFields & BTUICardFormOptionalFieldsCvv) {
@@ -133,9 +134,14 @@
     [self addSubview:self.postalCodeField];
     [self setAlphaNumericPostalCode:YES];
 
+    self.saveSwitch = [[BTUISaveSwitch alloc]init];
+    self.saveSwitch.translatesAutoresizingMaskIntoConstraints = NO;
+    [self addSubview:self.saveSwitch];
+
     self.vibrate = YES;
     self.optionalFields = BTUICardFormOptionalFieldsAll;
-
+    
+    
     for (UIView *v in self.fields) {
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[v]|" options:0 metrics:@{} views:@{@"v": v}]];
     }
@@ -145,7 +151,7 @@
                                                                  options:0
                                                                  metrics:0
                                                                    views:@{@"v": self.numberField}]];
-
+    
 }
 
 - (void)updateConstraints {

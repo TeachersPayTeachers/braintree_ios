@@ -13,8 +13,6 @@
 #import "BTClient_Internal.h"
 #import "BTLogger_Internal.h"
 
-//Amol modified
-
 @interface BTDropInViewController () < BTDropInSelectPaymentMethodViewControllerDelegate, BTUIScrollViewScrollRectToVisibleDelegate, BTUICardFormViewDelegate, BTPaymentMethodCreationDelegate, BTDropInViewControllerDelegate>
 
 @property (nonatomic, strong) BTDropInContentView *dropInContentView;
