@@ -124,6 +124,11 @@ typedef NS_ENUM(NSUInteger, BTPaymentMethodCard) {
 /// @param error An error that describes the failure.
 - (void)dropInViewControllerDidCancel:(BTDropInViewController *)viewController;
 
+/**
+ *  This request needs to be synchronous request. Its in the hands of the client to make this request synchronously.
+ */
+- (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController;
+
 @optional
 
 /**
@@ -135,10 +140,6 @@ typedef NS_ENUM(NSUInteger, BTPaymentMethodCard) {
  */
 - (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod paymentMethodCard:(BTPaymentMethodCard)paymentMethodCard;
 
-/**
- *  This request needs to be synchronous request. Its in the hands of the client to make this request synchronously.
- */
-- (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController;
 
 /// Informs the delegate when the user has entered or selected payment information.
 ///

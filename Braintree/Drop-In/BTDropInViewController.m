@@ -399,7 +399,11 @@
 }
 
 #pragma mark BTPaymentMethodCreationDelegate
+- (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController {
+    return [self.delegate dropInViewControllerDeleteAllCards:viewController];
+}
 
+#pragma mark Payment Method Authorizer Delegate methods
 - (void)paymentMethodCreator:(__unused id)sender requestsPresentationOfViewController:(UIViewController *)viewController {
     // In order to modally present PayPal on top of a nested Drop In, we need to first dismiss the
     // nested Drop In. Canceling will return to the outer Drop In.
