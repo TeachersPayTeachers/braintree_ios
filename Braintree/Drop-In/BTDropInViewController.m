@@ -269,7 +269,6 @@
     rootViewController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
                                                                                                         target:self
                                                                                                         action:@selector(didCancelChangePaymentMethod)];
-
     UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:rootViewController];
     [self presentViewController:navController animated:YES completion:nil];
 }
@@ -298,7 +297,16 @@
             request.cvv = cardForm.cvv;
             request.postalCode = cardForm.postalCode;
             request.shouldValidate = YES;
-
+            
+            BOOL cardDeleted = YES;
+            if ([self.delegate respondsToSelector:@selector(dropInViewControllerDeleteAllCards:)]) {
+               cardDeleted = [self.delegate dropInViewControllerDeleteAllCards:self];
+            }
+            if (!cardDeleted) {
+                [self displayCardSavingError];
+                return;
+            }
+            
             [client postAnalyticsEvent:@"dropin.ios.add-card.save"];
             [client saveCardWithRequest:request
                                 success:^(BTCardPaymentMethod *card) {
@@ -314,14 +322,7 @@
                                     }
                                 }];
         } else {
-            NSString *localizedAlertTitle = BTDropInLocalizedString(ERROR_SAVING_CARD_ALERT_TITLE);
-            NSString *localizedAlertMessage = BTDropInLocalizedString(ERROR_SAVING_CARD_MESSAGE);
-            NSString *localizedCancel = BTDropInLocalizedString(ERROR_ALERT_OK_BUTTON_TEXT);
-            [[[UIAlertView alloc] initWithTitle:localizedAlertTitle
-                                        message:localizedAlertMessage
-                                       delegate:nil
-                              cancelButtonTitle:localizedCancel
-                              otherButtonTitles:nil] show];
+            [self displayCardSavingError];
         }
     }
 }
@@ -389,6 +390,7 @@
     [newPaymentMethods insertObject:paymentMethod atIndex:0];
     self.paymentMethods = newPaymentMethods;
 }
+
 
 - (void)dropInViewControllerDidCancel:(BTDropInViewController *)viewController {
     [viewController.navigationController dismissViewControllerAnimated:YES completion:nil];
@@ -491,6 +493,10 @@
     if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:)]) {
         [self.delegate dropInViewController:self
                 didSucceedWithPaymentMethod:paymentMethod];
+    }
+    
+    if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:paymentMethodCard:)]) {
+        [self.delegate dropInViewController:self didSucceedWithPaymentMethod:paymentMethod paymentMethodCard:BTPaymentMethodCardDontSave];
     }
 }
 
@@ -655,6 +661,17 @@
         _addPaymentMethodDropInViewController.dropInContentView.paymentButton.delegate = self;
     }
     return _addPaymentMethodDropInViewController;
+}
+
+- (void)displayCardSavingError {
+    NSString *localizedAlertTitle = BTDropInLocalizedString(ERROR_SAVING_CARD_ALERT_TITLE);
+    NSString *localizedAlertMessage = BTDropInLocalizedString(ERROR_SAVING_CARD_MESSAGE);
+    NSString *localizedCancel = BTDropInLocalizedString(ERROR_ALERT_OK_BUTTON_TEXT);
+    [[[UIAlertView alloc] initWithTitle:localizedAlertTitle
+                                message:localizedAlertMessage
+                               delegate:nil
+                      cancelButtonTitle:localizedCancel
+                      otherButtonTitles:nil] show];
 }
 
 @end

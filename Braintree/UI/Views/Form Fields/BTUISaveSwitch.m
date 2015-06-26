@@ -25,6 +25,9 @@
         self.saveSwitch = [[UISwitch alloc]init];
         self.saveSwitch.translatesAutoresizingMaskIntoConstraints = YES;
         self.saveSwitch.frame = CGRectMake(0, 0, 100, 100);
+        self.textField.userInteractionEnabled = NO;
+        [self.saveSwitch addTarget:self action:@selector(switchChanged:) forControlEvents:UIControlEventValueChanged];
+
         [self addSubview:self.saveSwitch];
         [self setThemedPlaceholder:@"SAVE CARD"];
         
@@ -38,6 +41,13 @@
     return self;
 }
 
+- (void)switchChanged:(id)sender {
+    UISwitch *switchButton = (UISwitch *)sender;
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:switchButton.on forKey:@"SAVE_CREDIT_CARD"];
+    [userDefaults synchronize];
+}
 
 /*
 // Only override drawRect: if you perform custom drawing.
