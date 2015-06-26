@@ -396,6 +396,10 @@
     [viewController.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
+- (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController {
+    return [self.delegate dropInViewControllerDeleteAllCards:viewController];
+}
+
 #pragma mark Payment Method Authorizer Delegate methods
 
 - (void)paymentMethodCreator:(__unused id)sender requestsPresentationOfViewController:(UIViewController *)viewController {
