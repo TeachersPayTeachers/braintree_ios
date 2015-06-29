@@ -300,29 +300,33 @@
             request.postalCode = cardForm.postalCode;
             request.shouldValidate = YES;
             
-            BOOL cardDeleted = YES;
-            if ([self.delegate respondsToSelector:@selector(dropInViewControllerDeleteAllCards:)]) {
-               cardDeleted = [self.delegate dropInViewControllerDeleteAllCards:self];
-            }
-            if (!cardDeleted) {
-                [self displayCardSavingError];
-                return;
-            }
-            
-            [client postAnalyticsEvent:@"dropin.ios.add-card.save"];
-            [client saveCardWithRequest:request
-                                success:^(BTCardPaymentMethod *card) {
-                                    [client postAnalyticsEvent:@"dropin.ios.add-card.success"];
-                                    [self showLoadingState:NO];
-                                    [self informDelegateDidAddPaymentMethod:card];
-                                }
-                                failure:^(NSError *error) {
-                                    [self showLoadingState:NO];
-                                    [client postAnalyticsEvent:@"dropin.ios.add-card.failed"];
-                                    if ([error.domain isEqualToString:BTBraintreeAPIErrorDomain] && error.code == BTCustomerInputErrorInvalid) {
-                                        [self informUserDidFailWithError:error];
+            dispatch_queue_t serialQueue = dispatch_queue_create("com.braintree.serialDeletCardsQueue", DISPATCH_QUEUE_SERIAL);
+            dispatch_async(serialQueue, ^{
+                BOOL cardDeleted = YES;
+                if ([self.delegate respondsToSelector:@selector(dropInViewControllerDeleteAllCards:)]) {
+                    cardDeleted = [self.delegate dropInViewControllerDeleteAllCards:self];
+                }
+                
+                if (!cardDeleted) {
+                    [self displayCardSavingError];
+                    return;
+                }
+                
+                [client postAnalyticsEvent:@"dropin.ios.add-card.save"];
+                [client saveCardWithRequest:request
+                                    success:^(BTCardPaymentMethod *card) {
+                                        [client postAnalyticsEvent:@"dropin.ios.add-card.success"];
+                                        [self showLoadingState:NO];
+                                        [self informDelegateDidAddPaymentMethod:card];
                                     }
-                                }];
+                                    failure:^(NSError *error) {
+                                        [self showLoadingState:NO];
+                                        [client postAnalyticsEvent:@"dropin.ios.add-card.failed"];
+                                        if ([error.domain isEqualToString:BTBraintreeAPIErrorDomain] && error.code == BTCustomerInputErrorInvalid) {
+                                            [self informUserDidFailWithError:error];
+                                        }
+                                    }];
+            });
         } else {
             [self displayCardSavingError];
         }
@@ -681,14 +685,16 @@
 }
 
 - (void)displayCardSavingError {
-    NSString *localizedAlertTitle = BTDropInLocalizedString(ERROR_SAVING_CARD_ALERT_TITLE);
-    NSString *localizedAlertMessage = BTDropInLocalizedString(ERROR_SAVING_CARD_MESSAGE);
-    NSString *localizedCancel = BTDropInLocalizedString(ERROR_ALERT_OK_BUTTON_TEXT);
-    [[[UIAlertView alloc] initWithTitle:localizedAlertTitle
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString *localizedAlertTitle = BTDropInLocalizedString(ERROR_SAVING_CARD_ALERT_TITLE);
+        NSString *localizedAlertMessage = BTDropInLocalizedString(ERROR_SAVING_CARD_MESSAGE);
+        NSString *localizedCancel = BTDropInLocalizedString(ERROR_ALERT_OK_BUTTON_TEXT);
+        [[[UIAlertView alloc] initWithTitle:localizedAlertTitle
                                 message:localizedAlertMessage
                                delegate:nil
                       cancelButtonTitle:localizedCancel
                       otherButtonTitles:nil] show];
+    });
 }
 
 @end
