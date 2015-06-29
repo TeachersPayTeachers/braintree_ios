@@ -405,7 +405,10 @@
 }
 
 - (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController {
-    return [self.delegate dropInViewControllerDeleteAllCards:viewController];
+    if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:paymentMethodCard:)]) {
+        return [self.delegate dropInViewControllerDeleteAllCards:viewController];
+    }
+    return YES;
 }
 
 #pragma mark Payment Method Authorizer Delegate methods
@@ -508,7 +511,9 @@
     }
     
     if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:paymentMethodCard:)]) {
-        [self.delegate dropInViewController:self didSucceedWithPaymentMethod:paymentMethod paymentMethodCard:BTPaymentMethodCardDontSave];
+        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        BOOL shouldSaveCard = [userDefaults boolForKey:@"SAVE_CREDIT_CARD"];
+        [self.delegate dropInViewController:self didSucceedWithPaymentMethod:paymentMethod paymentMethodCard:shouldSaveCard];
     }
 }
 

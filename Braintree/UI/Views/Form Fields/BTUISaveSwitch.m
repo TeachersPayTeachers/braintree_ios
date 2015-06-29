@@ -41,8 +41,17 @@
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[saveSwitch]-|"
                                                                      options:0
                                                                      metrics:nil views:views]];
-        }
+        [self updateSwitch];
+    }
     return self;
+}
+
+-(void)updateSwitch {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:YES forKey:@"SAVE_CREDIT_CARD"];
+    [userDefaults synchronize];
+    
+    [self.saveSwitch setOn:YES];
 }
 
 - (void)switchChanged:(id)sender {
