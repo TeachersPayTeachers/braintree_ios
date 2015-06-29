@@ -1,9 +1,9 @@
 @import UIKit;
 #import "Braintree-API.h"
 
-typedef NS_ENUM(NSUInteger, BTPaymentMethodCard) {
-    BTPaymentMethodCardDontSave = 0,
-    BTPaymentMethodCardSave
+typedef NS_ENUM(NSUInteger, BTShouldSaveCard) {
+    BTShouldSaveCardDontSave = 0,
+    BTShouldSaveCardSave
 };
 
 
@@ -138,7 +138,7 @@ typedef NS_ENUM(NSUInteger, BTPaymentMethodCard) {
  *  @param paymentMethod     payment method with nonce
  *  @param paymentMethodCard
  */
-- (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod paymentMethodCard:(BTPaymentMethodCard)paymentMethodCard;
+- (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod shouldSaveCard:(BTShouldSaveCard)saveCard;
 
 
 /// Informs the delegate when the user has entered or selected payment information.

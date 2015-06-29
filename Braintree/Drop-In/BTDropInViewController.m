@@ -407,7 +407,7 @@
 
 #pragma mark BTPaymentMethodCreationDelegate
 - (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController {
-    if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:paymentMethodCard:)]) {
+    if ([self.delegate respondsToSelector:@selector(dropInViewControllerDeleteAllCards:)]) {
         return [self.delegate dropInViewControllerDeleteAllCards:viewController];
     }
     return YES;
@@ -517,10 +517,10 @@
                 didSucceedWithPaymentMethod:paymentMethod];
     }
     
-    if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:paymentMethodCard:)]) {
+    if ([self.delegate respondsToSelector:@selector(dropInViewController:didSucceedWithPaymentMethod:shouldSaveCard:)]) {
         NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
         BOOL shouldSaveCard = [userDefaults boolForKey:@"SAVE_CREDIT_CARD"];
-        [self.delegate dropInViewController:self didSucceedWithPaymentMethod:paymentMethod paymentMethodCard:shouldSaveCard];
+        [self.delegate dropInViewController:self didSucceedWithPaymentMethod:paymentMethod shouldSaveCard:shouldSaveCard];
     }
 }
 
