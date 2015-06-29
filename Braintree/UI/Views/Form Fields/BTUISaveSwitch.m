@@ -23,7 +23,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         self.saveSwitch = [[UISwitch alloc]init];
-        self.saveSwitch.translatesAutoresizingMaskIntoConstraints = YES;
+        self.saveSwitch.translatesAutoresizingMaskIntoConstraints = NO;
         self.saveSwitch.frame = CGRectMake(0, 0, 100, 100);
         self.textField.userInteractionEnabled = NO;
         [self.saveSwitch addTarget:self action:@selector(switchChanged:) forControlEvents:UIControlEventValueChanged];
@@ -31,13 +31,17 @@
         [self addSubview:self.saveSwitch];
         [self setThemedPlaceholder:@"SAVE CARD"];
         
-        [self addConstraint:[NSLayoutConstraint constraintWithItem:self.saveSwitch
-                                                           attribute:NSLayoutAttributeRight
-                                                           relatedBy:NSLayoutRelationEqual
-                                                              toItem:self
-                                                           attribute:NSLayoutAttributeLeft multiplier:1
-                                                            constant:0]];
-    }
+        UIView *saveSwitch = self.saveSwitch;
+        NSDictionary *views = NSDictionaryOfVariableBindings(saveSwitch);
+
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[saveSwitch]-|"
+                                                                    options:0
+                                                                    metrics:nil views:views]];
+        
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[saveSwitch]-|"
+                                                                     options:0
+                                                                     metrics:nil views:views]];
+        }
     return self;
 }
 
