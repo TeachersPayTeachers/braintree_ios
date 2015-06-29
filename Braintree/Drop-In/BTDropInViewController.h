@@ -105,16 +105,6 @@ typedef NS_ENUM(NSUInteger, BTShouldSaveCard) {
 /// A protocol for BTDropInViewController completion notifications.
 @protocol BTDropInViewControllerDelegate <NSObject>
 
-/// Informs the delegate when the user has successfully provided a payment method.
-///
-/// Upon receiving this message, you should dismiss Drop In.
-///
-/// @param viewController The Drop In view controller informing its delegate of success
-/// @param paymentMethod The selected (and possibly newly created) payment method.
-- (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod;
-
-
-
 /// Informs the delegate when the user has decided to cancel out of the Drop In payment form.
 ///
 /// Drop In handles its own error cases, so this cancelation is user initiated and
@@ -130,6 +120,14 @@ typedef NS_ENUM(NSUInteger, BTShouldSaveCard) {
 - (BOOL)dropInViewControllerDeleteAllCards:(BTDropInViewController *)viewController;
 
 @optional
+
+/// Informs the delegate when the user has successfully provided a payment method.
+///
+/// Upon receiving this message, you should dismiss Drop In.
+///
+/// @param viewController The Drop In view controller informing its delegate of success
+/// @param paymentMethod The selected (and possibly newly created) payment method.
+- (void)dropInViewController:(BTDropInViewController *)viewController didSucceedWithPaymentMethod:(BTPaymentMethod *)paymentMethod;
 
 /**
  *  This will be called once the card has been saved and passes back if the card needs to be saved or deleted
