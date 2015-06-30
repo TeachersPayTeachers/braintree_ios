@@ -302,6 +302,7 @@
             
             dispatch_queue_t serialQueue = dispatch_queue_create("com.braintree.serialDeletCardsQueue", DISPATCH_QUEUE_SERIAL);
             dispatch_async(serialQueue, ^{
+                // We create a serialqueue so we dont block the main queue
                 BOOL cardDeleted = YES;
                 if ([self.delegate respondsToSelector:@selector(dropInViewControllerDeleteAllCards:)]) {
                     cardDeleted = [self.delegate dropInViewControllerDeleteAllCards:self];
@@ -309,6 +310,7 @@
                 
                 if (!cardDeleted) {
                     [self displayCardSavingError];
+                    [self showLoadingState:NO];
                     return;
                 }
                 
@@ -340,15 +342,17 @@
 #pragma mark Progress UI
 
 - (void)showLoadingState:(BOOL)loadingState {
-    [self.dropInContentView.ctaControl showLoadingState:loadingState];
-    self.submitBarButtonItem.enabled = !loadingState;
-    if (self.submitBarButtonItem != nil) {
-        [BTUI activityIndicatorViewStyleForBarTintColor:self.navigationController.navigationBar.barTintColor];
-        UIActivityIndicatorView *submitInProgressActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-        [submitInProgressActivityIndicator startAnimating];
-        UIBarButtonItem *submitInProgressActivityIndicatorBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:submitInProgressActivityIndicator];
-        [self.navigationItem setRightBarButtonItem:(loadingState ? submitInProgressActivityIndicatorBarButtonItem : self.submitBarButtonItem) animated:YES];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.dropInContentView.ctaControl showLoadingState:loadingState];
+        self.submitBarButtonItem.enabled = !loadingState;
+        if (self.submitBarButtonItem != nil) {
+            [BTUI activityIndicatorViewStyleForBarTintColor:self.navigationController.navigationBar.barTintColor];
+            UIActivityIndicatorView *submitInProgressActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+            [submitInProgressActivityIndicator startAnimating];
+            UIBarButtonItem *submitInProgressActivityIndicatorBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:submitInProgressActivityIndicator];
+            [self.navigationItem setRightBarButtonItem:(loadingState ? submitInProgressActivityIndicatorBarButtonItem : self.submitBarButtonItem) animated:YES];
+        }
+    });
 }
 
 #pragma mark Error UI
