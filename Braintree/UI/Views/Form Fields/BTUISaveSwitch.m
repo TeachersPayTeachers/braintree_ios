@@ -29,7 +29,7 @@
         [self.saveSwitch addTarget:self action:@selector(switchChanged:) forControlEvents:UIControlEventValueChanged];
 
         [self addSubview:self.saveSwitch];
-        [self setThemedPlaceholder:@"SAVE CARD"];
+        [self setThemedPlaceholder:NSLocalizedString(@"Save Card", "")];
         
         UIView *saveSwitch = self.saveSwitch;
         NSDictionary *views = NSDictionaryOfVariableBindings(saveSwitch);
