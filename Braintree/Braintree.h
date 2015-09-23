@@ -10,6 +10,13 @@
 #import <Braintree/BTPaymentButton.h>
 #import <Braintree/BTClientCardTokenizationRequest.h>
 
+@class Braintree;
+@class PKPayment;
+
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void (^BraintreeCompletionBlock)(Braintree *__nullable braintree, NSError *__nullable error);
+
 /// The `Braintree` class is the front door to the Braintree SDK for iOS. It contains
 /// everything you need to easily start accepting payments in your mobile app.
 ///
@@ -32,7 +39,7 @@
 
 /// Returns an instance of `Braintree`, the public interface of Braintree-iOS.
 ///
-/// @param clientToken value that is generated on your sever using a Braintree server-side
+/// @param clientToken value that is generated on your server using a Braintree server-side
 ///  client library that contains all necessary configuration to setup the client SDKs. It also
 ///  authenticates the application to communicate directly to Braintree.
 ///
@@ -42,8 +49,7 @@
 /// @note You should generate a new client token before each checkout to ensure it has not expired.
 ///
 /// @return An instance of the Braintree Library to perform payment operations.
-+ (Braintree *)braintreeWithClientToken:(NSString *)clientToken;
-
++ (nullable Braintree *)braintreeWithClientToken:(NSString *)clientToken;
 
 #pragma mark UI
 
@@ -80,7 +86,7 @@
 /// @param types    payment method types to enable from BTPaymentProviderType. If nil, the button may expose any available payment authorization types.
 ///
 /// @return A button you can add to your checkout flow.
-- (BTPaymentButton *)paymentButtonWithDelegate:(id<BTPaymentMethodCreationDelegate>)delegate paymentProviderTypes:(NSOrderedSet *)types;
+- (BTPaymentButton *)paymentButtonWithDelegate:(id<BTPaymentMethodCreationDelegate>)delegate paymentProviderTypes:(nullable NSOrderedSet *)types;
 
 
 #pragma mark Custom
@@ -95,9 +101,8 @@
 /// @param cardDetails a tokenization request object containing the raw card details
 /// @param completionBlock Completion block that is called exactly once asynchronously, providing either a nonce upon success or an error upon failure.
 - (void)tokenizeCard:(BTClientCardTokenizationRequest *)cardDetails
-          completion:(void (^)(NSString *nonce, NSError *error))completionBlock;
+          completion:(void (^)(NSString * __nullable nonce, NSError * __nullable error))completionBlock;
 
-#if BT_ENABLE_APPLE_PAY
 /// Creates and returns a payment method nonce for the given Apple Pay payment details
 ///
 /// @note You should use this method if you have implemented Apple Pay directly with PassKit (PKPaymentRequest,
@@ -106,8 +111,7 @@
 /// @param applePayPayment a PKPayment you receive from a PKPaymentAuthorizationViewControllerDelegate
 /// @param completionBlock Completion block that is called exactly once asynchronously, providing either a nonce upon success or an error upon failure.
 - (void)tokenizeApplePayPayment:(PKPayment *)applePayPayment
-                     completion:(void (^)(NSString *nonce, NSError *error))completionBlock;
-#endif
+                     completion:(void (^)(NSString * __nullable nonce, NSError * __nullable error))completionBlock;
 
 /// Initializes a provider that can initiate various payment method creation flows.
 ///
@@ -148,7 +152,7 @@
 /// @param sourceApplication The source application received by the application delegate `openURL` method
 ///
 /// @return Whether Braintree was able to handle the URL and source application
-+ (BOOL)handleOpenURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication;
++ (BOOL)handleOpenURL:(NSURL *)url sourceApplication:(nullable NSString *)sourceApplication;
 
 
 #pragma mark Advanced Integrations
@@ -185,7 +189,7 @@
 - (void)tokenizeCardWithNumber:(NSString *)cardNumber
                expirationMonth:(NSString *)expirationMonth
                 expirationYear:(NSString *)expirationYear
-                    completion:(void (^)(NSString *nonce, NSError *error))completionBlock DEPRECATED_MSG_ATTRIBUTE("Please use -[braintree tokenizeCardWithComponents:completion:]");
+                    completion:(void (^)(NSString * __nullable nonce, NSError * __nullable error))completionBlock DEPRECATED_MSG_ATTRIBUTE("Please use -[Braintree tokenizeCardWithComponents:completion:]");
 
 
 /// Creates and returns a PayPal button that can be added to the UI. When tapped, this button will initiate the PayPal authorization flow.
@@ -193,6 +197,8 @@
 /// @param delegate Delegate that is notified of completion, receiving either a payment method with a nonce (upon user agreement and success) or an error (upon failure).
 ///
 /// @return A PayPal button to be added as a subview in your UI.
-- (BTPayPalButton *)payPalButtonWithDelegate:(id<BTPayPalButtonDelegate>)delegate DEPRECATED_MSG_ATTRIBUTE("Please use -[braintree paymentButtonWithDelegate:]");
+- (nullable BTPayPalButton *)payPalButtonWithDelegate:(id<BTPayPalButtonDelegate>)delegate DEPRECATED_MSG_ATTRIBUTE("Please use -[Braintree paymentButtonWithDelegate:]");
 
 @end
+
+NS_ASSUME_NONNULL_END

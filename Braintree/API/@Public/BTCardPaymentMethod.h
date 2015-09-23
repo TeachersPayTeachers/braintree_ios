@@ -1,4 +1,5 @@
-@import Foundation;
+#import <Foundation/Foundation.h>
+
 #import "BTPaymentMethod.h"
 
 /// Card type
@@ -32,10 +33,5 @@ typedef NS_ENUM(NSInteger, BTCardType) {
 
 /// Last two digits of the card
 @property (nonatomic, readonly, copy) NSString *lastTwo;
-
-#pragma mark 3D Secure
-
-/// Information about the 3D Secure liability shift (present only if applicable)
-@property (nonatomic, readonly, copy) NSDictionary *threeDSecureInfo;
 
 @end

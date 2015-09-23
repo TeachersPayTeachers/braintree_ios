@@ -1,7 +1,9 @@
+@import PassKit;
+
 #import "Braintree.h"
 #import "Braintree_Internal.h"
-
 #import "BTLogger.h"
+#import "BTConfiguration.h"
 
 #import <Braintree/BTClient+Offline.h>
 #import <Braintree/BTPayPalButton.h>
@@ -12,9 +14,11 @@ SpecBegin(Braintree)
 __block Braintree *braintree;
 
 beforeEach(^{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSString *clientToken = [BTClient offlineTestClientTokenWithAdditionalParameters:nil];
-    braintree = [Braintree braintreeWithClientToken:clientToken];
-
+    braintree = [Braintree braintreeWithClientToken:clientToken]; // deprecated
+#pragma clang diagnostic pop
 });
 
 describe(@"tokenizeCardWithNumber:expirationMonth:expirationYear:completion:", ^{
@@ -98,33 +102,32 @@ describe(@"tokenizeCardWithNumber:expirationMonth:expirationYear:completion:", ^
 
 describe(@"dropInViewControllerWithCustomization:completion: Drop-In factory method", ^{
     it(@"constructs a Drop-In view controller", ^{
-        UIViewController *dropIn = [braintree dropInViewControllerWithDelegate:nil];
+        UIViewController *dropIn = [braintree dropInViewControllerWithDelegate:OCMProtocolMock(@protocol(BTDropInViewControllerDelegate))];
 
         expect(dropIn).to.beKindOf([UIViewController class]);
         expect([dropIn view]).to.beKindOf([UIView class]);
     });
 
     it(@"returns a new instance each time", ^{
-        UIViewController *dropIn1 = [braintree dropInViewControllerWithDelegate:nil];
-        UIViewController *dropIn2 = [braintree dropInViewControllerWithDelegate:nil];
+        UIViewController *dropIn1 = [braintree dropInViewControllerWithDelegate:OCMProtocolMock(@protocol(BTDropInViewControllerDelegate))];
+        UIViewController *dropIn2 = [braintree dropInViewControllerWithDelegate:OCMProtocolMock(@protocol(BTDropInViewControllerDelegate))];
 
         expect(dropIn1).notTo.beIdenticalTo(dropIn2);
     });
 });
 
-describe(@"payPalButtonWithCompletion:", ^{
+describe(@"payPalButtonWithDelegate:", ^{
     __block Braintree *braintreeWithPayPalEnabled;
 
     describe(@"with PayPal enabled", ^{
         beforeEach(^{
-            NSString *clientToken = [BTClient offlineTestClientTokenWithAdditionalParameters:@{BTClientTokenKeyPayPalEnabled: @YES}];
-            braintreeWithPayPalEnabled = [Braintree braintreeWithClientToken:clientToken];
-
-        });
-        it(@"should return a payPalButton", ^{
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            BTPayPalButton *control = [braintreeWithPayPalEnabled payPalButtonWithDelegate:nil];
+            NSString *clientToken = [BTClient offlineTestClientTokenWithAdditionalParameters:@{BTConfigurationKeyPayPalEnabled: @YES}];
+            braintreeWithPayPalEnabled = [Braintree braintreeWithClientToken:clientToken]; // deprecated
+        });
+        it(@"should return a payPalButton", ^{
+            BTPayPalButton *control = [braintreeWithPayPalEnabled payPalButtonWithDelegate:OCMProtocolMock(@protocol(BTPayPalButtonDelegate))]; // deprecated
 #pragma clang diagnostic pop
             expect(control).to.beKindOf([BTPayPalButton class]);
         });
@@ -134,9 +137,9 @@ describe(@"payPalButtonWithCompletion:", ^{
         it(@"should not return a payPalButton", ^{
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            UIControl *control = [braintree payPalButtonWithDelegate:nil];
+            UIControl *control = [braintree payPalButtonWithDelegate:OCMProtocolMock(@protocol(BTPayPalButtonDelegate))];
 #pragma clang diagnostic pop
-            expect(control).to.beNil;
+            expect(control).to.beNil();
         });
     });
 });
@@ -144,7 +147,7 @@ describe(@"payPalButtonWithCompletion:", ^{
 describe(@"paymentButtonWithDelegate:paymentProviderTypes:", ^{
     it(@"returns a PaymentButton with specified payment providers", ^{
         id enabledPaymentProviderTypes = [NSOrderedSet orderedSetWithObjects:@(BTPaymentProviderTypePayPal), nil];
-        BTPaymentButton *button = [braintree paymentButtonWithDelegate:nil paymentProviderTypes:enabledPaymentProviderTypes];
+        BTPaymentButton *button = [braintree paymentButtonWithDelegate:OCMProtocolMock(@protocol(BTPaymentMethodCreationDelegate)) paymentProviderTypes:enabledPaymentProviderTypes];
 
         expect(button).to.beKindOf([BTPaymentButton class]);
         expect(button.enabledPaymentProviderTypes).to.equal(enabledPaymentProviderTypes);

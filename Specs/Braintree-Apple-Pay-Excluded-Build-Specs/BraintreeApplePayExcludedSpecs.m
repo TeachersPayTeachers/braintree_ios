@@ -1,10 +1,14 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
+#import <OCMock/OCMock.h>
+#import <PassKit/PassKit.h>
+
 #import <Braintree/Braintree.h>
 #import <Braintree/BTPaymentProvider.h>
 #import <Braintree/BTClient.h>
+
+#import "BTTestClientTokenFactory.h"
 #import <Braintree/BTClient+Offline.h>
-#import <OCMock/OCMock.h>
 #import "BTLogger_Internal.h"
 
 @interface Braintree (BraintreeApplePayExcludedSpecsTestAddition)
@@ -29,12 +33,14 @@
 }
 
 - (void)tokenizeApplePay {
-    Braintree *bt = [Braintree braintreeWithClientToken:[BTClient offlineTestClientTokenWithAdditionalParameters:@{}]];
-    [bt tokenizeApplePayPayment:nil completion:nil];
+    Braintree *braintree = [Braintree braintreeWithClientToken:[BTTestClientTokenFactory tokenWithVersion:2]];
+    [braintree tokenizeApplePayPayment:[PKPayment new] completion:^(NSString * __nullable nonce, NSError * __nullable error) {
+    }];
 }
 
 - (void)testBTPaymentProviderExcludesApplePay {
-    Braintree *bt = [Braintree braintreeWithClientToken:[BTClient offlineTestClientTokenWithAdditionalParameters:@{}]];
+    NSString *clientToken = [BTTestClientTokenFactory tokenWithVersion:2];
+    Braintree *bt = [Braintree braintreeWithClientToken:clientToken];
 
     id mockDelegate = [OCMockObject mockForProtocol:@protocol(BTPaymentMethodCreationDelegate)];
     [[mockDelegate expect] paymentMethodCreator:OCMOCK_ANY didFailWithError:[OCMArg checkWithBlock:^BOOL(id obj) {

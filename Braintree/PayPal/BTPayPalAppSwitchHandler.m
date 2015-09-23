@@ -1,5 +1,6 @@
 #import "BTPayPalAppSwitchHandler_Internal.h"
 
+#import "BTAppSwitch.h"
 #import "BTClient_Internal.h"
 #import "BTClient+BTPayPal.h"
 #import "BTMutablePayPalPaymentMethod.h"
@@ -13,6 +14,12 @@
 
 @synthesize returnURLScheme;
 @synthesize delegate;
+
++ (void)load {
+    if (self == [BTPayPalAppSwitchHandler class]) {
+        [[BTAppSwitch sharedInstance] addAppSwitching:[BTPayPalAppSwitchHandler sharedHandler] forApp:BTAppTypePayPal];
+    }
+}
 
 + (instancetype)sharedHandler {
     static BTPayPalAppSwitchHandler *instance;
@@ -143,16 +150,12 @@
     BOOL payPalTouchDidAuthorize = [PayPalTouch authorizeScopeValues:self.client.btPayPal_scopes configuration:configuration];
     if (payPalTouchDidAuthorize) {
         [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.success"];
-        return YES;
     } else {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.failed"];
-        if (error) {
-            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                         code:BTAppSwitchErrorFailed
-                                     userInfo:@{NSLocalizedDescriptionKey:@"Failed to initiate PayPal app switch."}];
-        }
-        return NO;
+        // Until 3.8.2, this event was "ios.paypal.appswitch.initiate.error.failed" and returned NO
+        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.possible-error"];
     }
+    // Work around an iOS bug that causes -openURL: to return NO after a new app is installed
+    return YES;
 }
 
 - (BOOL)appSwitchAvailableForClient:(BTClient *)client {

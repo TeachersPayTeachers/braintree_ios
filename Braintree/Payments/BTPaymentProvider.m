@@ -2,15 +2,14 @@
 
 #import "BTPaymentProvider.h"
 #import "BTClient_Internal.h"
+#import "BTAppSwitch.h"
 #import "BTAppSwitching.h"
 
-#import "BTVenmoAppSwitchHandler.h"
-
 #import "BTPayPalViewController.h"
-#import "BTPayPalAppSwitchHandler.h"
 #import "BTClient+BTPayPal.h"
 #import "BTPaymentApplePayProvider.h"
 #import "BTLogger_Internal.h"
+
 
 @interface BTPaymentProvider () <BTPayPalViewControllerDelegate, BTAppSwitchingDelegate, BTPaymentMethodCreationDelegate>
 @property (nonatomic, strong) BTPaymentApplePayProvider *applePayPaymentProvider;
@@ -51,6 +50,9 @@
         case BTPaymentProviderTypeApplePay:
             [self authorizeApplePay:options];
             break;
+        case BTPaymentProviderTypeCoinbase:
+            [self authorizeCoinbase];
+            break;
         default:
             break;
     }
@@ -58,7 +60,7 @@
 
 - (void)setClient:(BTClient *)client {
     _client = client;
-    
+
     // If PayPal is a possibility with this client, prepare.
     if ([self.client btPayPal_isPayPalEnabled]) {
         NSError *error;
@@ -76,12 +78,18 @@
             return [self.applePayPaymentProvider canAuthorizeApplePayPayment];
         case BTPaymentProviderTypePayPal:
             return [self.client btPayPal_isPayPalEnabled];
-        case BTPaymentProviderTypeVenmo:
-            return [[BTVenmoAppSwitchHandler sharedHandler] appSwitchAvailableForClient:self.client];
-        default:
-            return NO;
+        case BTPaymentProviderTypeVenmo: {
+            id <BTAppSwitching> appSwitching = [[BTAppSwitch sharedInstance] appSwitchingForApp:BTAppTypeVenmo];
+            return [appSwitching appSwitchAvailableForClient:self.client];
+        }
+        case BTPaymentProviderTypeCoinbase: {
+            id <BTAppSwitching> appSwitching = [[BTAppSwitch sharedInstance] appSwitchingForApp:BTAppTypeCoinbase];
+            return [appSwitching appSwitchAvailableForClient:self.client];
+        }
+        default: return NO;
     }
 }
+
 
 #pragma mark Apple Pay
 
@@ -100,15 +108,15 @@
 #pragma mark Venmo
 
 - (void)authorizeVenmo:(BTPaymentMethodCreationOptions)options {
-    
+
     if ((options & BTPaymentAuthorizationOptionMechanismAppSwitch) == 0) {
         NSError *error = [NSError errorWithDomain:BTPaymentProviderErrorDomain code:BTPaymentProviderErrorOptionNotSupported userInfo:nil];
         [self informDelegateDidFailWithError:error andPostAnalyticsEvent:NO];
         return;
     }
-    
+
     NSError *error;
-    BOOL appSwitchSuccess = [[BTVenmoAppSwitchHandler sharedHandler] initiateAppSwitchWithClient:self.client delegate:self error:&error];
+    BOOL appSwitchSuccess = [[[BTAppSwitch sharedInstance] appSwitchingForApp:BTAppTypeVenmo] initiateAppSwitchWithClient:self.client delegate:self error:&error];
     if (appSwitchSuccess) {
         [self informDelegateWillPerformAppSwitch];
     } else {
@@ -136,7 +144,7 @@
     BOOL initiated = NO;
     if (appSwitchOptionEnabled) {
         
-        BOOL appSwitchSuccess = [[BTPayPalAppSwitchHandler sharedHandler] initiateAppSwitchWithClient:self.client delegate:self error:&error];
+        BOOL appSwitchSuccess = [[[BTAppSwitch sharedInstance] appSwitchingForApp:BTAppTypePayPal] initiateAppSwitchWithClient:self.client delegate:self error:&error];
         if (appSwitchSuccess) {
             initiated = YES;
             [self informDelegateWillPerformAppSwitch];
@@ -173,6 +181,20 @@
         [self informDelegateDidFailWithError:error andPostAnalyticsEvent:YES];
     }
 }
+
+
+#pragma mark Coinbase
+
+- (void)authorizeCoinbase {
+    NSError *error;
+    BOOL appSwitchSuccess = [[[BTAppSwitch sharedInstance] appSwitchingForApp:BTAppTypeCoinbase] initiateAppSwitchWithClient:self.client delegate:self error:&error];
+    if (appSwitchSuccess) {
+        [self informDelegateWillPerformAppSwitch];
+    } else {
+        [self informDelegateDidFailWithError:error andPostAnalyticsEvent:YES];
+    }
+}
+
 
 #pragma mark Inform Delegate
 
@@ -264,14 +286,6 @@
 }
 
 #pragma mark BTAppSwitchingDelegate
-
-- (void)appSwitcherWillInitiate:(__unused id<BTAppSwitching>)switcher {
-    [self informDelegateWillPerformAppSwitch];
-}
-
-- (void)appSwitcherWillSwitch:(__unused id<BTAppSwitching>)switcher {
-    [self informDelegateWillPerformAppSwitch];
-}
 
 - (void)appSwitcherWillCreatePaymentMethod:(__unused id<BTAppSwitching>)switcher {
     [self informDelegateWillProcess];

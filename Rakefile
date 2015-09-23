@@ -8,7 +8,7 @@ HighLine.color_scheme = HighLine::SampleColorScheme.new
 task :default => %w[sanity_checks spec]
 
 desc "Run default set of tasks"
-task :spec => %w[spec:unit spec:api:unit spec:ui:unit spec:paypal:unit spec:venmo:unit spec:payments spec:acceptance]
+task :spec => %w[spec:unit spec:api:unit spec:ui:unit spec:paypal:unit spec:venmo:unit spec:payments spec:data spec:acceptance]
 
 desc "Run internal release process, pushing to internal GitHub Enterprise only"
 task :release => %w[release:assumptions release:check_working_directory release:bump_version release:test release:lint_podspec release:tag release:push_private]
@@ -103,14 +103,14 @@ namespace :spec do
     run_test_scheme! 'Braintree-Payments-Specs'
   end
 
+  desc 'Run UI Acceptance tests'
+  task :acceptance do
+    run_test_scheme! 'Braintree-Acceptance-Specs'
+  end
+
   desc 'Run Data tests'
   task :data do
     run_test_scheme! 'Braintree-Data-Specs'
-  end
-
-  desc 'Run Acceptance tests'
-  task :acceptance do
-    run_test_scheme! 'Braintree-Acceptance-Specs'
   end
 
   namespace :paypal do
@@ -175,31 +175,14 @@ namespace :demo do
     run! xcodebuild(scheme, 'build', 'Release')
   end
 
+  desc 'Verify that the demo app builds successfully'
   task :build do
     build_demo! 'Braintree-Demo'
-  end
-
-  namespace :api do
-    task :build do
-      build_demo! 'Braintree-API-Demo'
-    end
-  end
-
-  namespace :ui do
-    task :build do
-      build_demo! 'Braintree-UI-Demo'
-    end
-  end
-
-  namespace :paypal do
-    task :build do
-      build_demo! 'Braintree-PayPal-Demo'
-    end
   end
 end
 
 desc 'Run all sanity checks'
-task :sanity_checks => %w[sanity_checks:pending_specs sanity_checks:build_all_demos]
+task :sanity_checks => %w[sanity_checks:pending_specs sanity_checks:build_demo]
 
 namespace :sanity_checks do
   desc 'Check for pending tests'
@@ -209,7 +192,7 @@ namespace :sanity_checks do
   end
 
   desc 'Verify that all demo apps Build successfully'
-  task :build_all_demos => %w[demo:build demo:api:build demo:ui:build demo:paypal:build]
+  task :build_demo => 'demo:build'
 end
 
 
@@ -323,7 +306,7 @@ namespace :release do
     version_header.gsub!(SEMVER, version)
     File.open(VERSION_FILE, "w") { |f| f.puts version_header }
 
-    run! "pod update Braintree Braintree/Apple-Pay Braintree/Data Braintree/3D-Secure"
+    run! "pod update Braintree Braintree/Apple-Pay Braintree/Data Braintree/3D-Secure Braintree/Coinbase"
     run! "plutil -replace CFBundleVersion -string #{current_version} -- '#{DEMO_PLIST}'"
     run! "plutil -replace CFBundleShortVersionString -string #{current_version} -- '#{DEMO_PLIST}'"
     run "git commit -m 'Bump pod version to #{version}' -- #{PODSPEC} Podfile.lock '#{DEMO_PLIST}' #{VERSION_FILE}"

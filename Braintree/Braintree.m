@@ -2,6 +2,7 @@
 
 #import "BTClient.h"
 #import "BTClient+BTPayPal.h"
+#import "BTClient_Internal.h"
 #import "BTLogger_Internal.h"
 
 #import "BTPayPalButton.h"
@@ -10,8 +11,6 @@
 #import "BTDropInViewController.h"
 
 #import "BTAppSwitch.h"
-#import "BTVenmoAppSwitchHandler.h"
-#import "BTPayPalAppSwitchHandler.h"
 
 @interface Braintree ()
 @property (nonatomic, strong) BTClient *client;
@@ -22,11 +21,22 @@
 @implementation Braintree
 
 + (Braintree *)braintreeWithClientToken:(NSString *)clientToken {
-    return [(Braintree *)[self alloc] initWithClientToken:clientToken];
+    return [[self alloc] initWithClientToken:clientToken];
+}
+
++ (void)setupWithClientToken:(NSString *)clientToken
+                  completion:(BraintreeCompletionBlock)completionBlock {
+    
+    [BTClient setupWithClientToken:clientToken
+                        completion:^(BTClient *client, NSError *error)
+     {
+         Braintree *braintree = [[self alloc] initWithClient:client];
+         completionBlock(braintree, error);
+     }];
 }
 
 - (id)init {
-    self =[super init];
+    self = [super init];
     if (self) {
         self.retainedPaymentProviders = [NSMutableSet set];
     }
@@ -34,12 +44,14 @@
 }
 
 - (instancetype)initWithClientToken:(NSString *)clientToken {
+    return [self initWithClient:[[BTClient alloc] initWithClientToken:clientToken]];
+}
+
+- (instancetype)initWithClient:(BTClient *)client {
     self = [self init];
     if (self) {
-        self.client = [[BTClient alloc] initWithClientToken:clientToken];
-        [self.client postAnalyticsEvent:@"sdk.ios.braintree.init"
-                                success:nil
-                                failure:nil];
+        self.client = client;
+        [self.client postAnalyticsEvent:@"sdk.ios.braintree.init"];
     }
     return self;
 }
@@ -182,17 +194,10 @@
 
 + (void)setReturnURLScheme:(NSString *)scheme {
     [BTAppSwitch sharedInstance].returnURLScheme = scheme;
-    [self initAppSwitchingOptions];
 }
 
 + (BOOL)handleOpenURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication {
-    [self initAppSwitchingOptions];
     return [[BTAppSwitch sharedInstance] handleReturnURL:url sourceApplication:sourceApplication];
-}
-
-+ (void)initAppSwitchingOptions {
-    [[BTAppSwitch sharedInstance] addAppSwitching:[BTVenmoAppSwitchHandler sharedHandler]];
-    [[BTAppSwitch sharedInstance] addAppSwitching:[BTPayPalAppSwitchHandler sharedHandler]];
 }
 
 @end

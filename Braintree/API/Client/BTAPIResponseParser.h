@@ -1,4 +1,4 @@
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 @protocol BTValueTransforming <NSObject>
 - (id)transformedValue:(id)value;
@@ -30,4 +30,3 @@
 - (BOOL)boolForKey:(NSString *)key withValueTransformer:(id<BTValueTransforming>)valueTransformer;
 
 @end
-

@@ -1,4 +1,4 @@
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 #define BTUILocalizedString(KEY) [BTUILocalizedString KEY]
 
@@ -27,4 +27,6 @@
 + (NSString *)CARD_TYPE_SOLO;
 + (NSString *)CARD_TYPE_LASER;
 + (NSString *)PAYMENT_METHOD_TYPE_PAYPAL;
++ (NSString *)PAYMENT_METHOD_TYPE_COINBASE;
+
 @end

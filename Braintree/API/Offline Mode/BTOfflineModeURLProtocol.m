@@ -170,14 +170,15 @@ static BTOfflineClientBackend *backend;
                                                statusCode:200
                                               HTTPVersion:BTOfflineModeHTTPVersionString
                                              headerFields:@{@"Content-Type": @"application/json" }];
-
-        NSDictionary *testConfiguration = @{
-                                            @"applePay": @{ @"status": @"mock",
-                                                            @"countryCode": @"US",
-                                                            @"currencyCode": @"USD",
-                                                            @"supportedNetworks": @[ @"visa", @"mastercard", @"amex" ],
-                                                            @"merchantIdentifier": @"offline-mode-apple-merchant-identifier" }
-                                            };
+        Class TestConfigurationFactoryClass = [NSClassFromString(@"BTTestClientTokenFactory") class];
+        NSDictionary *testConfiguration = TestConfigurationFactoryClass ? (NSDictionary *)[TestConfigurationFactoryClass performSelector:@selector(configuration)] :
+        @{
+          @"applePay": @{ @"status": @"mock",
+                          @"countryCode": @"US",
+                          @"currencyCode": @"USD",
+                          @"supportedNetworks": @[ @"visa", @"mastercard", @"amex" ],
+                          @"merchantIdentifier": @"offline-mode-apple-merchant-identifier" }
+          };
         responseData = ({
             NSError *error;
             NSData *data = [NSJSONSerialization dataWithJSONObject:testConfiguration
@@ -236,9 +237,9 @@ static BTOfflineClientBackend *backend;
         NSArray *parameters = [queryString componentsSeparatedByString:@"&"];
         for (NSString *parameter in parameters) {
             NSArray *parts = [parameter componentsSeparatedByString:@"="];
-            NSString *key = [[parts objectAtIndex:0] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            NSString *key = [[parts objectAtIndex:0] stringByRemovingPercentEncoding];
             if ([parts count] > 1) {
-                id value = [[parts objectAtIndex:1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                id value = [[parts objectAtIndex:1] stringByRemovingPercentEncoding];
                 [result setObject:value forKey:key];
             }
         }

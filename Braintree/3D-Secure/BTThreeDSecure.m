@@ -12,7 +12,7 @@
 @implementation BTThreeDSecure
 
 - (instancetype)init {
-    @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"init is not available for BTThreeDSecure, please use initWithClient" userInfo:nil];
+    @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"-init is not available for BTThreeDSecure. Use -initWithClient:delegate: instead." userInfo:nil];
     return [self initWithClient:nil delegate:nil];
 }
 
@@ -41,15 +41,7 @@
                                             [self informDelegateRequestsPresentationOfViewController:navigationController];
                                             [self.client postAnalyticsEvent:@"ios.threedsecure.authentication-start"];
                                         } else {
-                                            NSDictionary *threeDSecureInfo = lookupResult.card.threeDSecureInfo;
-                                            if ([threeDSecureInfo[@"liabilityShiftPossible"] boolValue] && [threeDSecureInfo[@"liabilityShifted"] boolValue]) {
-                                                [self informDelegateDidCreatePaymentMethod:lookupResult.card];
-                                            } else {
-                                                [self informDelegateDidFailWithError:[NSError errorWithDomain:BTThreeDSecureErrorDomain
-                                                                                                         code:BTThreeDSecureFailedLookupErrorCode
-                                                                                                     userInfo:@{ NSLocalizedDescriptionKey: @"3D Secure authentication was attempted but liability shift is not possible",
-                                                                                                                 BTThreeDSecureInfoKey: lookupResult.card.threeDSecureInfo, }]];
-                                            }
+                                            [self informDelegateDidCreatePaymentMethod:lookupResult.card];
                                         }
                                     }
                                     failure:^(NSError *error) {

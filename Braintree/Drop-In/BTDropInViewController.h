@@ -1,4 +1,4 @@
-@import UIKit;
+#import <UIKit/UIKit.h>
 #import "Braintree-API.h"
 
 typedef NS_ENUM(NSUInteger, BTShouldSaveCard) {

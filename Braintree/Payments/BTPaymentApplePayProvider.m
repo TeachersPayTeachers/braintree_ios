@@ -18,11 +18,19 @@
 @property (nonatomic, strong) BTClient *client;
 @property (nonatomic, strong) NSError *applePayError;
 @property (nonatomic, strong) BTPaymentMethod *applePayPaymentMethod;
+
+- (instancetype)init NS_DESIGNATED_INITIALIZER DEPRECATED_ATTRIBUTE;
+
 @end
 
 @implementation BTPaymentApplePayProvider
 
+- (instancetype)init {
+    return [super init];
+}
+
 - (instancetype)initWithClient:(BTClient *)client {
+    self = [super init];
     if (self) {
         self.client = client;
     }
@@ -44,7 +52,7 @@
         return NO;
     }
 
-    if (self.client.clientToken.applePayStatus == BTClientApplePayStatusOff) {
+    if (self.client.configuration.applePayStatus == BTClientApplePayStatusOff) {
         return NO;
     }
 
@@ -76,7 +84,7 @@
         return;
     }
 
-    if (self.client.clientToken.applePayStatus == BTClientApplePayStatusOff) {
+    if (self.client.configuration.applePayStatus == BTClientApplePayStatusOff) {
         NSError *error = [NSError errorWithDomain:BTPaymentProviderErrorDomain
                                              code:BTPaymentProviderErrorOptionNotSupported
                                          userInfo:@{ NSLocalizedDescriptionKey: @"Apple Pay is not enabled for this merchant account" }];
@@ -111,26 +119,13 @@
     }
 
 
-    UIViewController *paymentAuthorizationViewController;
-    if ([[self class] isSimulator]) {
-        paymentAuthorizationViewController = ({
-            BTMockApplePayPaymentAuthorizationViewController *mockVC = [[BTMockApplePayPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
-            mockVC.delegate = self;
-            mockVC;
-        });
-    } else {
-        paymentAuthorizationViewController = ({
-            PKPaymentAuthorizationViewController *realVC = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
-            realVC.delegate = self;
-            realVC;
-        });
-        if (paymentAuthorizationViewController == nil) {
-            NSError *error = [NSError errorWithDomain:BTPaymentProviderErrorDomain
-                                                 code:BTPaymentProviderErrorInitialization
-                                             userInfo:@{ NSLocalizedDescriptionKey: @"Failed to initialize a Apple Pay authorization view controller. Check device, OS version, cards in Passbook and configuration." }];
-            [self informDelegateDidFailWithError:error];
-            return;
-        }
+    UIViewController *paymentAuthorizationViewController = [self paymentAuthorizationViewControllerWithPaymentRequest:paymentRequest];
+    if (paymentAuthorizationViewController == nil) {
+        NSError *error = [NSError errorWithDomain:BTPaymentProviderErrorDomain
+                                             code:BTPaymentProviderErrorInitialization
+                                         userInfo:@{ NSLocalizedDescriptionKey: @"Failed to initialize a Apple Pay authorization view controller. Check device, OS version, cards in Passbook and configuration." }];
+        [self informDelegateDidFailWithError:error];
+        return;
     }
 
     [self informDelegateRequestsPresentationOfViewController:paymentAuthorizationViewController];
@@ -148,6 +143,26 @@
 }
 
 #if BT_ENABLE_APPLE_PAY
+
+- (UIViewController *)paymentAuthorizationViewControllerWithPaymentRequest:(PKPaymentRequest *)paymentRequest {
+    UIViewController *paymentAuthorizationViewController;
+
+    if ([[self class] isSimulator]) {
+        paymentAuthorizationViewController = ({
+            BTMockApplePayPaymentAuthorizationViewController *mockVC = [[BTMockApplePayPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
+            mockVC.delegate = self;
+            mockVC;
+        });
+    } else {
+        paymentAuthorizationViewController = ({
+            PKPaymentAuthorizationViewController *realVC = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
+            realVC.delegate = self;
+            realVC;
+        });
+    }
+    return paymentAuthorizationViewController;
+}
+
 - (PKPaymentRequest *)paymentRequest {
     if (![PKPaymentRequest class]) {
         return nil;
@@ -155,10 +170,10 @@
 
     PKPaymentRequest *paymentRequest = [[PKPaymentRequest alloc] init];
     paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
-    paymentRequest.currencyCode = self.client.clientToken.applePayCurrencyCode;
-    paymentRequest.countryCode = self.client.clientToken.applePayCountryCode;
-    paymentRequest.merchantIdentifier = self.client.clientToken.applePayMerchantIdentifier;
-    paymentRequest.supportedNetworks = self.client.clientToken.applePaySupportedNetworks;
+    paymentRequest.currencyCode = self.client.configuration.applePayCurrencyCode;
+    paymentRequest.countryCode = self.client.configuration.applePayCountryCode;
+    paymentRequest.merchantIdentifier = self.client.configuration.applePayMerchantIdentifier;
+    paymentRequest.supportedNetworks = self.client.configuration.applePaySupportedNetworks;
 
     if (self.paymentSummaryItems) {
         paymentRequest.paymentSummaryItems = self.paymentSummaryItems;

@@ -1,6 +1,9 @@
-@import Foundation;
+#import <Foundation/Foundation.h>
+
 #import "BTClient.h"
 #import "BTAppSwitchingDelegate.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol BTAppSwitching <NSObject>
 
@@ -43,7 +46,7 @@
 ///
 ///  @return Whether this instance can handle the given callback URL from
 ///  the given source application.
-- (BOOL)canHandleReturnURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication;
+- (BOOL)canHandleReturnURL:(NSURL *)url sourceApplication:(nullable NSString *)sourceApplication;
 
 ///  Handle the actual response URL that contains payment authorization,
 ///  indication of cancellation, or error information.
@@ -52,3 +55,5 @@
 - (void)handleReturnURL:(NSURL *)url;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -33,6 +33,16 @@
     return [BTUICardExpirationValidator month:self.expirationMonth.intValue year:self.expirationYear.intValue validForDate:[NSDate date]];
 }
 
+- (void)setExpirationDate:(NSString *)expirationDate { 
+    [self setText:expirationDate];
+ }
+
+- (NSString *)expirationDate {
+    if (!self.expirationMonth || !self.expirationYear) return nil;
+
+    return [NSString stringWithFormat:@"%@%@", self.expirationMonth, self.expirationYear];
+}
+
 #pragma mark - Handlers
 
 - (void)fieldContentDidChange {
@@ -48,6 +58,15 @@
     format.backspace = self.backspace;
     [format formattedValue:&formattedValue cursorLocation:&formattedCursorLocation];
 
+    // Important: Reset the state of self.backspace.
+    // Otherwise, the user won't be able to do the following:
+    // Enter "11/16", then backspace to
+    //       "1", and then type e.g. "2". Instead of showing:
+    //       "12/" (as it should), the form would instead remain stuck at
+    //       "1".
+    self.backspace = NO;
+    // This is because UIControlEventEditingChanged is *not* sent after the "/" is removed.
+    // We can't trigger UIControlEventEditingChanged here (after removing a "/") because that would cause an infinite loop.
 
     NSMutableAttributedString *result = [[NSMutableAttributedString alloc] initWithString:formattedValue attributes:self.theme.textFieldTextAttributes];
     [self kernExpiration:result];
@@ -57,7 +76,7 @@
     UITextRange *newRange = [self.textField textRangeFromPosition:newPosition toPosition:newPosition];
     self.textField.selectedTextRange = newRange;
 
-    NSArray *expirationComponents = [self expirationComponents];
+    NSArray *expirationComponents = [self expirationComponents:self.textField.text];
     if(expirationComponents.count == 2 && (self.textField.text.length == 5 || self.textField.text.length == 7)) {
         _expirationMonth = expirationComponents[0];
         _expirationYear = expirationComponents[1];
@@ -87,25 +106,7 @@
     }
     NSString *updatedText = [textField.text stringByReplacingCharactersInRange:range withString:numericNewText];
 
-    BOOL couldEndWithFourDigitYear = [self couldEndWithFourDigitYear];
-    if (couldEndWithFourDigitYear ? updatedText.length > 7 : updatedText.length > 5) {
-        return NO;
-    }
-
-    NSString *updatedNumberText = [BTUIUtil stripNonDigits:updatedText];
-
-    NSString *monthStr = [updatedNumberText substringToIndex:MIN((NSUInteger)2, updatedNumberText.length)];
-    if(monthStr.length > 0) {
-        NSInteger month = [monthStr integerValue];
-        if(month < 0 || 12 < month) {
-            return NO;
-        }
-        if(monthStr.length >= 2 && month == 0) {
-            return NO;
-        }
-    }
-    
-    return YES;
+    return [self dateIsValid:updatedText];
 }
 
 - (BOOL)entryComplete {
@@ -115,7 +116,7 @@
 #pragma mark Helper
 
 - (void)updatePlaceholder {
-    NSString *placeholder = [self couldEndWithFourDigitYear] ? BTUILocalizedString(EXPIRY_PLACEHOLDER_FOUR_DIGIT_YEAR) : BTUILocalizedString(EXPIRY_PLACEHOLDER_TWO_DIGIT_YEAR);
+    NSString *placeholder = [self dateCouldEndWithFourDigitYear:self.textField.text] ? BTUILocalizedString(EXPIRY_PLACEHOLDER_FOUR_DIGIT_YEAR) : BTUILocalizedString(EXPIRY_PLACEHOLDER_TWO_DIGIT_YEAR);
     [self setThemedPlaceholder:placeholder];
     self.textField.accessibilityLabel = placeholder;
 }
@@ -127,44 +128,14 @@
         [self setThemedAttributedPlaceholder:attributedPlaceholder];
 }
 
-- (BOOL)couldEndWithFourDigitYear {
-    NSArray *expirationComponents = [self expirationComponents];
+- (BOOL)dateCouldEndWithFourDigitYear:(NSString *)expirationDate {
+    NSArray *expirationComponents = [self expirationComponents:expirationDate];
     NSString *yearComponent = [expirationComponents count] >= 2 ? expirationComponents[1] : nil;
     return (yearComponent && yearComponent.length >= 2 && [[yearComponent substringToIndex:2] isEqualToString:BTUICardExpiryFieldYYYYPrefix]);
 }
 
-- (NSArray *)expirationComponents {
-    return [self.textField.text componentsSeparatedByString:BTUICardExpiryFieldComponentSeparator];
-}
-
-- (void)format {
-    NSMutableString *s = [NSMutableString stringWithString:[BTUIUtil stripNonDigits:self.textField.text]];
-
-    if (s.length == 0) {
-        self.textField.attributedText = [[NSAttributedString alloc] initWithString:s];
-        return;
-    }
-
-    if ([s characterAtIndex:0] > '1' && [s characterAtIndex:0] <= '9') {
-        [s insertString:@"0" atIndex:0];
-    }
-
-    if (self.backspace) {
-        if (s.length == 2) {
-            [s deleteCharactersInRange:NSMakeRange(1, 1)];
-        }
-    }
-
-    if (s.length > 2 && ![[s substringWithRange:NSMakeRange(2, 1)] isEqualToString:BTUICardExpiryFieldComponentSeparator]) {
-        [s insertString:BTUICardExpiryFieldComponentSeparator
-                atIndex:2];
-    } else if (s.length == 2) {
-        [s appendString:BTUICardExpiryFieldComponentSeparator];
-    }
-
-    NSMutableAttributedString *result = [[NSMutableAttributedString alloc] initWithString:s attributes:self.theme.textFieldTextAttributes];
-    [self kernExpiration:result];
-    self.textField.attributedText = result;
+- (NSArray *)expirationComponents:(NSString *)expirationDate {
+    return [expirationDate componentsSeparatedByString:BTUICardExpiryFieldComponentSeparator];
 }
 
 - (void)kernExpiration:(NSMutableAttributedString *)input {
@@ -178,6 +149,39 @@
         }
     }
     [input endEditing];
+}
+
+// Returns YES if date is either a valid date or can have digits appended to make one. It does not contain any expiration
+// date validation.
+- (BOOL)dateIsValid:(NSString *)date {
+    NSArray *dateComponents = [date componentsSeparatedByString:BTUICardExpiryFieldComponentSeparator];
+
+    NSString *yearComponent;
+    if (dateComponents.count >= 2) {
+        yearComponent = dateComponents[1];
+    } else {
+        yearComponent = date.length >= 4 ? [date substringWithRange:NSMakeRange(2, date.length - 2)] : nil;
+    }
+
+    BOOL couldEndWithFourDigitYear = yearComponent && yearComponent.length >= 2 && [[yearComponent substringToIndex:2] isEqualToString:BTUICardExpiryFieldYYYYPrefix];
+    if (couldEndWithFourDigitYear ? date.length > 7 : date.length > 5) {
+        return NO;
+    }
+
+    NSString *updatedNumberText = [BTUIUtil stripNonDigits:date];
+
+    NSString *monthStr = [updatedNumberText substringToIndex:MIN((NSUInteger)2, updatedNumberText.length)];
+    if (monthStr.length > 0) {
+        NSInteger month = [monthStr integerValue];
+        if(month < 0 || 12 < month) {
+            return NO;
+        }
+        if(monthStr.length >= 2 && month == 0) {
+            return NO;
+        }
+    }
+
+    return YES;
 }
 
 
