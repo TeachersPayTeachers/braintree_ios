@@ -5,6 +5,8 @@
 
 #import "BTPaymentButton.h"
 
+@class DTAttributedLabel;
+
 typedef NS_ENUM(NSUInteger, BTDropInContentViewStateType) {
     BTDropInContentViewStateForm = 0,
     BTDropInContentViewStatePaymentMethodsOnFile,
@@ -19,6 +21,7 @@ typedef NS_ENUM(NSUInteger, BTDropInContentViewStateType) {
 @property (nonatomic, strong) BTPaymentButton *paymentButton;
 @property (nonatomic, strong) UILabel *cardFormSectionHeader;
 @property (nonatomic, strong) BTUICardFormView *cardForm;
+@property (nonatomic, strong) DTAttributedLabel *agreementAttributedLabel;
 
 @property (nonatomic, strong) BTUIPaymentMethodView *selectedPaymentMethodView;
 @property (nonatomic, strong) UIButton *changeSelectedPaymentMethodButton;
@@ -34,6 +37,8 @@ typedef NS_ENUM(NSUInteger, BTDropInContentViewStateType) {
 
 ///  Whether the paymentButton control is hidden
 @property (nonatomic, assign) BOOL hidePaymentButton;
+
+@property (nonatomic, copy, nullable) void (^userDidTapAgreementLink)(NSString*);
 
 - (void)setState:(BTDropInContentViewStateType)newState animate:(BOOL)animate;
 

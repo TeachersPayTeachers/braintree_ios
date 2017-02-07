@@ -99,6 +99,7 @@ typedef NS_ENUM(NSUInteger, BTShouldSaveCard) {
 ///       in order to avoid a loading spinner.
 - (void)fetchPaymentMethods;
 
+@property (nonatomic, copy, nullable) void (^userDidTapAgreementLink)(NSString*);
 
 @end
 

@@ -75,6 +75,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.dropInContentView.userDidTapAgreementLink = self.userDidTapAgreementLink;
 
     self.view.backgroundColor = self.theme.viewBackgroundColor;
 
