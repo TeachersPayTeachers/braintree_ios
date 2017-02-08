@@ -40,6 +40,7 @@ Pod::Spec.new do |s|
     s.dependency "Braintree/Venmo"
     s.dependency "Braintree/Coinbase"
     s.dependency "Braintree/Payments"
+    s.dependency "DTCoreText"
     s.resource_bundle = { "Braintree-Drop-In-Localization" => "Braintree/Drop-In/Localization/*.lproj" }
   end
 
