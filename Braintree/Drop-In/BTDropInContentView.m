@@ -56,7 +56,7 @@
 
     self.agreementAttributedLabel = [[DTAttributedLabel alloc] init];
 
-    NSString *htmlString = @"By checking out, I agree with the <a href='https://www.teacherspayteachers.com/Terms-of-Service'>terms of service</a> and <a href='https://www.teacherspayteachers.com/Privacy-Policy'>privacy policy</a>.";
+    NSString *htmlString = @"By submitting your order, you agree to our <a href='https://www.teacherspayteachers.com/Terms-of-Service'>Terms of Service</a> and <a href='https://www.teacherspayteachers.com/Privacy-Policy'>Privacy Policy</a>.";
     NSData *htmlData = [htmlString dataUsingEncoding:NSUTF8StringEncoding];
 
     NSDictionary *options = @{
